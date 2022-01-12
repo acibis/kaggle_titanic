@@ -194,7 +194,7 @@ print("Train:", X_train.shape, y_train.shape)
 print("Test:", X_test.shape, y_test.shape)
 ```
 
-Następnie model, którego będziemy używać. Nasza zmienna docelowa posiada 2 wartości, 0 i 1. Albo inaczej mówiąc, 2 klasy: przeżył/nie przeżył. Szukamy zatem czegoś do klasyfikacji (wynikiem jest przydział do grupy, na przykład pies/kot. W przeciwieństwie do regresji, gdzie przewidujemy wartość, na przykład cenę benzyny) i możemy wybierać między innymi między Logistic Regression, Naive Bayes, Stochastic Gradient Descent, Decision Tree, Random Forest, Support Vector Machine etc. Nie szalejmy, LogisticRegression brzmi spoko.
+Następnie model, którego będziemy używać. Nasza zmienna docelowa posiada 2 wartości, 0 i 1. Albo inaczej mówiąc, 2 klasy: przeżył/nie przeżył. Szukamy zatem czegoś do klasyfikacji (wynikiem jest przydział do grupy, na przykład pies/kot. W przeciwieństwie do regresji, gdzie przewidujemy wartość, na przykład cenę benzyny) i możemy wybierać między innymi między Logistic Regression, Naive Bayes, Stochastic Gradient Descent, Decision Tree, Random Forest, Support Vector Machine etc. Nie szalejmy, LogisticRegression brzmi spoko. (attention 1: mimo, że nazwa modelu to regresja, używamy go do klasyfikacji, pownieważ attention 2, przyjmuje wartości 0 i 1)
  
 ```
 from sklearn.linear_model import LogisticRegression
