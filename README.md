@@ -1,6 +1,6 @@
 # Kaggle Titanic - jak to zrobić, żeby przerobić
 
-*CO:  szybkie przejście przez kagglowy zbiór danych [Titanic](https://www.kaggle.com/c/titanic) - podobno najpierwszy i najlepszy start dla wszystkich chcących ogarnąć Machine Learning*
+*CO:  szybkie i podstawowe przejście przez kagglowy zbiór danych [Titanic](https://www.kaggle.com/c/titanic) - podobno najpierwszy i najlepszy start dla wszystkich chcących ogarnąć Machine Learning. Jeśli szukasz czegoś bardziej skomplikowanego, zajrzyj do [części rozszerzonej](https://github.com/acibis/kaggle_titanic_advanced)*
 
 *PO CO:  żebym w końcu miała w jednym miejscu skrót procesu myślowego, który zaszedł w trakcie pracy nad zbiorem. Plus to taki mój mały pamiętniczek, zmusza mnie do myślenia, sprawdzania pojęć, definicji. Więc po co - totalnie dla mnie ;)*
 
@@ -61,12 +61,12 @@ Dobrze jest mieć szerszy wgląd w sytuację i dane, które analizujemy. Tutaj w
   
   #### 2.3.1 Brakujące wartości.
   
-  Jednym z problemów, z jakimi mierzymy się w świecie data science, są brakujące dane. Sposobów na radzenie sobie z nim jest kilka i trzeba nimi żonglować w zależności od sytuacji. Jaki więc mamy wybór?
+Jednym z problemów, z jakimi mierzymy się w świecie data science, są brakujące dane. Sposobów na radzenie sobie z nim jest kilka i trzeba nimi żonglować w zależności od sytuacji. Jaki więc mamy wybór?
   - usunąć wiersze z brakującymi wartościami. Jeśli wierszy mamy dużo, te, w których występują brakujące wartości nie są wyjątkowe i niewiele stracimy, możemy je usunąć
   - usunąć kolumny z brakującymi wartościami. Jeśli wiemy, że dana kolumna nie będzie brała udziału w analizie (bo nie ma związku i wpływu na przewidywaną przez nas cechę), możemy ją porzucić
   - uzupełnić kolumny byle jaką wartością liczbową. Cokolwiek (na przykład 0) bardziej się spodoba modelowi niż brak wartości. Czasami to nie ma wpływu na wynik, czasami jeśli nam się spieszy i chcemy po prostu mieć działający (nie mówię, że dobrze działający) model, można skorzystać z tej metody.
   - uzupełnić wiersze własnymi wartościami używając zdrowego rozsądku. Na przykład:
-    - jeśli posiadamy kolumnę pełną 0 i 1, w której brakuje wartości, możemy wpisać w brakujące miejsca same 0, lub same 1. Jest to o tyle zdroworozsądkowe, że w kolumnie występują 0 i 1 (nie wpisujemy 3jek), ale o tyle małorozsądkowe, że nasza bonusowa liczba 0 lub 1 może zmienić wynik końcowy. Możemy więc wejść na wyższy poziom zdrowego rozsądku, sprawdzić stosunek 0 do 1 i wpisać odpowiednio w brakujące miejsca od góry najpierw pewną liczbę 0 , a potem pewną liczbę 1 odpowiadającą stosunkowi w całej kolumnie. Czyli jeśli mamy 90 wierszy, w których jest 60 zer i 20 jedynek, oraz 10 brakującyh pól, to wpisujemy tam 6 zer i 2 jedynki.  Na wyżyny zdrowego rozsądku wznosimy się uzupełniając losowo brakujące miejsca zerami i jedynkami w stosunku odpowiednim do ich liczby w całej kolumnie.
+    - jeśli posiadamy kolumnę pełną 0 i 1, w której brakuje wartości, możemy wpisać w brakujące miejsca same 0, lub same 1. Jest to o tyle zdroworozsądkowe, że w kolumnie występują 0 i 1 (nie wpisujemy 3jek), ale o tyle małorozsądkowe, że nasza bonusowa liczba 0 lub 1 może zmienić wynik końcowy. Możemy więc wejść na wyższy poziom zdrowego rozsądku, sprawdzić stosunek 0 do 1 i wpisać odpowiednio w brakujące miejsca od góry najpierw pewną liczbę 0 , a potem pewną liczbę 1 odpowiadającą stosunkowi w całej kolumnie. Czyli jeśli mamy 90 wierszy, w których jest 60 zer i 20 jedynek, oraz 10 brakującyh pól, to wpisujemy tam 7 zer i 3 jedynki.
     - jeśli mamy kolumnę zawierającą czyjś wiek ( a to się za chwilę wydarzy), to w brakujące miejsca możemy: wpisać dowolną wartość z zakresu długości ludzkiego życia (zdrowy rozsądek podpowiada, żeby to nie było -4 albo 236). Na przykład 2 (bo dlaczego nie 2). Możemy też sprawdzić, jaki jest średni wiek wszystkich ludzi w zbiorze. Albo mediana wieku. Albo możemy sprawdzić, jaki jest rozkład odpowiednich grup wiekowych i na tej podstawie uzupełnić pola tak, żeby stosunek poszczególnych grup (dzieci, nastolatkowie, dorośli, emeryci) został zachowany.
   
   Zatem do dzieła. Gdzie brakuje nam danych?
@@ -112,7 +112,7 @@ She boarded the Titanic at Southampton as maid to Mrs George Nelson Stone. She t
   ```
   ![image](https://user-images.githubusercontent.com/13216011/148649627-daeeeebf-86b3-41b7-acb3-2c44377181e6.png)
   
-  Imię i nazwisko pasażera raczej nam się nie przyda, tak samo jak numer biletu, te koumny pominiemy. Potrzebna jest natomiast płeć i port. Zamieńmy płeć (male, female) na 0 i 1, a port (S, C, Q) na 1, 2 i 3.
+  Imię i nazwisko pasażera raczej nam się nie przyda, tak samo jak numer biletu, te kolumny pominiemy. Potrzebna jest natomiast płeć i port. Zamieńmy płeć (male, female) na 0 i 1, a port (S, C, Q) na 1, 2 i 3.
   
  ```
  dict = {"S" : 1, "C" : 2, "Q": 3}
@@ -174,7 +174,7 @@ Jak widać wyżej, wysoką korelację (ujemną lub dodatnią) mają płeć, klas
  
  Przygotowujemy zmienne (te same zmienne, o których wiemy, że mają istotną korelację ze zmienną docelową Survived):
  ```
-feats = [ 'Sex_Int', 'Pclass', 'Fare', 'Embarked' ] #zmienne, które mają wysoką korelację z Survived
+feats = [ 'Sex_Int', 'Pclass', 'Fare', 'Embarked_Int' ] #zmienne, które mają wysoką korelację z Survived
 
 X = df[feats].values # X to nasza macierz wartości (uwaga suchar, jak się nazywa męska tablica? pacierz)
 
@@ -247,6 +247,10 @@ X_kaggle_test = kaggle_test[feats].values # macierz cech
 pred = model.predict(X_kaggle_test) # predykcja
 ```
 
-Zapisujemy do pliku submission.csv 2 kolumny: ID pasażera i nasz przewidywany wynik. Taki format pliku jest narzucony przez Kaggle, można to sprawdzić w zakładce Data. I w końcu wrzucamy nasz plik na Kaggle i sprawdzamy, jak sobie poradził :) Mój wynik to 0.76315. Myślę, że to się plasuje gdzieś w kategorii brązowego medalu, czyli nie było najgorzej, zdecydowanie może być lepiej. Ale hej, tu chodziło o zrozumienie schematu i kolejności wykonywania działań przy zwyczajnym zadaniu MLowym. Na inżynierię cech i inne cuda przyjdzie jeszcze czas.
+Zapisujemy do pliku submission.csv 2 kolumny: ID pasażera i nasz przewidywany wynik. Taki format pliku jest narzucony przez Kaggle, można to sprawdzić w zakładce Data. I w końcu wrzucamy nasz plik na Kaggle i sprawdzamy, jak sobie poradził :) 
+ 
+## 3. PODSUMOWANIE.
+ 
+<p align="justify"> Mój wynik to 0.76315. Myślę, że to się plasuje gdzieś w kategorii brązowego medalu, czyli nie było najgorzej, zdecydowanie może być lepiej. Ale hej, tu chodziło o zrozumienie schematu i kolejności wykonywania działań przy zwyczajnym zadaniu MLowym. Na inżynierię cech i inne cuda przyjdzie jeszcze czas.
  
 PS> Btw, nie dajcie się zdeprymować wynikami równymi 1 na leaderboardzie Kaggle. To ludzie, którzy oszukiwali - [tutaj](https://www.kaggle.com/carlmcbrideellis/titanic-leaderboard-a-score-0-8-is-great) info na ten temat.
