@@ -8,31 +8,35 @@
 
 ## 1. WSTĘP
 
-<p align="justify"> Żeby zacząć pracować z danymi i Machine Learningiem, należy posiadać bardzo specyficzny rys psychologiczny. Trzeba się pogodzić ze stałą frustracją, poszukiwaniem, wiecznym cofaniem się o kilka kroków, niejednokrotnie niemożnością ułożenia wszystkiego chronologicznie, logicznie i ładnie. Pamiętam, jak na samym początku drogi denerwowałam się, widząc długaśne analizy danych, wykresy i ściany tekstu, podczas gdy szukałam przecież MLa, a nie statystyki. I pamiętam irytację, kiedy magiczny ML okazywał się trzema nieopisanymi linijkami kodu w gąszczu czyszczenia danych, feature engineeringu i innych rzeczy. Teraz, długi czas później, już wiem, że to jednak te wszystkie poprzedzające etapy są najważniejsze, a ML to rzeczywiście trzy nieimponujące linijki, które wykonują 10% pracy, a których powodzenie zależy od 90% reszty etapów.
+<p align="justify"> Żeby zacząć pracować z danymi i Machine Learningiem, należy posiadać bardzo specyficzny rys psychologiczny. Trzeba się pogodzić ze stałą frustracją, poszukiwaniem, wiecznym cofaniem się o kilka kroków, niejednokrotnie niemożnością ułożenia wszystkiego chronologicznie, logicznie i ładnie. Pamiętam, jak na samym początku drogi denerwowałam się, widząc długaśne analizy danych, wykresy i ściany tekstu, podczas gdy szukałam przecież MLa, a nie statystyki. I pamiętam irytację, kiedy magiczny ML okazywał się trzema nieopisanymi linijkami kodu w gąszczu czyszczenia danych, feature engineeringu i innych rzeczy. Teraz, długi czas później, już wiem, że to jednak te wszystkie poprzedzające etapy są najważniejsze, a ML to rzeczywiście trzy nieimponujące linijki, które wykonują 10% pracy, a których powodzenie zależy od 90% reszty etapów. Również dużo czasu zajęło mi zrozumienie, że warto cenić prostotę i zaczynać od najmniej skomplikowanych pomysłów. A zatem: do najprostszego możliwego rozwiązania tego problemu!
 
-Co jest ważne?
+Co jest zawsze ważne?
  - model ML przyjmuje jedynie dane liczbowe - jeśli dane mają inną formę (na przykład kolor), należy je przerobić
  - model ML nie przyjmie danych z brakami - jeśli dane mają braki, należy się ich pozbyć (usunąć lub uzupełnić, wedle uznania)
  - jedne cechy mają większy wpływ na przewidywany wynik niż inne - niektórych wcale nie trzeba brać pod uwagę i wrzucać do modelu
  - można tworzyć nowe cechy na podstawie już istniejących. Jak?
  - przed przystąpieniem do tworzenia modelu dobrze jest przeanalizować dane i użyć zdrowego rozsądku oraz intelektu (niestety)
+ - warto połączyć zbiór treningowy z testowym, żeby zwiększyć ilość danych.
   
   ## 2. PLAN
-  1. Wczytać dane i rzucić na nie okiem.
+  1. Wczytać dane, połączyć zbiory i rzucić na nie okiem.
   2. Ogarnąć kontekst historyczno-kulturowy.
   3. Przygotować/wyczyścić dane.
-  4. Przeanalizować dane.
-  5. Stworzyć model i sprawdzić jego skuteczność.
-  6. Wgrać wynik do Kaggle.
+  4. Stworzyć model i sprawdzić jego skuteczność.
+  5. Wgrać wynik do Kaggle.
  
  
-  ### 2.1 Wczytać dane i rzucić na nie okiem.
+  ### 2.1 Wczytać dane, połączyć zbiory i rzucić na nie okiem.
   
 ```
-# import danych
-df = pd.read_csv("./train.csv")
-# przykładowe 3 wiersze
-data.sample(3)
+#import danych treningowych
+df_train = pd.read_csv("./train.csv")
+#import danych testowych
+df_test = pd.read_csv("./test.csv")
+
+# połączenie zbiorów
+df = df_train.append(df_test, ignore_index=True, sort=True)
+df.head(5)
  ```
 ![image](https://user-images.githubusercontent.com/13216011/148648536-4fc0ac60-2971-4f25-94ef-4db089740aef.png)
 
@@ -75,9 +79,31 @@ Jednym z problemów, z jakimi mierzymy się w świecie data science, są brakuj�
   df.isnull().sum()
   ```
   
-  ![image](https://user-images.githubusercontent.com/13216011/148649032-b081e9d1-d8f2-44d8-9109-75064b0aa64c.png)
+![image](https://user-images.githubusercontent.com/13216011/165539802-a0fd6b41-cafd-455d-a49a-3453b93a6bc9.png)
 
-  Nie jest źle. Zacznijmy od najmniejszego problemu, czyli brakującej dla 2 osób informacji o porcie zaokrętowania. Podglądnijmy te 2 wiersze:
+  Nie jest źle. Zacznijmy od najmniejszego problemu, czyli brakującej dla 1 osoby informacji o cenie biletu. Uzupełnijmy ten drobny brak średnią ceną wszystkich biletów:
+ 
+ ```
+ df.loc[df['Fare'].isnull(), 'Fare'] = 14.435422
+ ```
+ 
+ Rozwiązaliśmy problem BRAKUJĄCEJ wartości. Ale kiedy przyjrzymy się kolumnie Fare, dostrzeżemy, że zawiera ona również zera.
+ 
+ ![image](https://user-images.githubusercontent.com/13216011/165541046-5b60ca83-f9a4-4c35-809a-990ed244a123.png)
+
+ Czy to możliwe, żeby ktoś nie zapłacił za bilet? Dostał go w prezencie? Nie, encyklopedia Titanica o niczym takim nie wspomina. Wyliczymy więc średnią cenę biletu dla każdej klasy i portu zaokrętowania i w ten sposób wypełnimy zera. Oczywiście można by to również zastosować do brakującej wartości powyżej - obydwie metody są tak samo skuteczne.
+ 
+ ```
+fare_means = df.groupby(['Embarked', 'Pclass'])['Fare'].mean().reset_index()
+def find_fare(embarked, pclass):
+    fare = fare_means[(fare_means['Embarked'] == embarked) & (fare_means['Pclass'] == pclass)]['Fare'].values[0]
+    return(fare)
+ 
+ df['Fare'] = df.apply(lambda x: find_fare(x.Embarked, x.Pclass) if x.Fare == 0 else x.Fare, axis=1)
+ ```
+ 
+
+ Następnie mamy dla 2 osób brak informacji o porcie zaokrętowania. Podglądnijmy te 2 wiersze:
   ```
   df[df['Embarked'].isnull()]
   ```
@@ -87,7 +113,8 @@ Widzimy, że te dwie podróżne mieszkały w jednej kabinie. Być może płynę�
  df[df['Cabin'] == "B28"]
  ```
   ![image](https://user-images.githubusercontent.com/13216011/148649125-8539ade6-eedb-40e2-8529-63617cdf95f5.png)
-Niestety nie. Skorzystajmy więc po prostu z potęgi internetu, wpiszmy w wyszukiwarkę imię i nazwisko pasażerki:
+
+ Niestety nie. Skorzystajmy więc po prostu z potęgi internetu, wpiszmy w wyszukiwarkę imię i nazwisko pasażerki:
   
   >Miss Rose Amélie Icard, 38, was born in Vaucluse, France on 31 October 1872, her father Marc Icard lived at Mafs á Murs (?).
 She boarded the Titanic at Southampton as maid to Mrs George Nelson Stone. She travelled on Mrs Stone's ticket (#113572).
@@ -96,13 +123,11 @@ She boarded the Titanic at Southampton as maid to Mrs George Nelson Stone. She t
   ```
   df.loc[df['Embarked'].isnull(), 'Embarked'] = 'S'
   ```
-  
-  Następnie kwestia wieku - brakuje nam 177 z 891 wartości i tak, jak pisałam wyżej, proponuję chwilowo uzupełnić braki najczęsciej wystepującą w kolumnie wiek wartością.
-  ```
-  df.loc[df['Age'].isnull(), 'Age'] = df['Age'].median()
-  ```
-  
-  Ostatnie brakujące wartości dotyczą numeru kabiny. Brakuje większości, bo aż 687 z 891 numerów. W tej sytuacji, chwilowo decyduję się tę kolumnę pominąć w analizie i modelu.
+ 
+ Braków w kolumnie Wiek i Kabina mamy dużo, a nawet o wiele więcej. W tym podstawowym rozwiązaniu podejmiemy decyzję, żeby te kolumny w takim razie porzucić. 
+ 
+ ![image](https://user-images.githubusercontent.com/13216011/165540553-1040f060-85fc-4117-9766-03c39a82f401.png)
+
   
  #### 2.3.2 Zmienne nienumeryczne.
   
@@ -112,59 +137,32 @@ She boarded the Titanic at Southampton as maid to Mrs George Nelson Stone. She t
   ```
   ![image](https://user-images.githubusercontent.com/13216011/148649627-daeeeebf-86b3-41b7-acb3-2c44377181e6.png)
   
-  Imię i nazwisko pasażera raczej nam się nie przyda, tak samo jak numer biletu, te kolumny pominiemy. Potrzebna jest natomiast płeć i port. Zamieńmy płeć (male, female) na 0 i 1, a port (S, C, Q) na 1, 2 i 3.
+  Imię i nazwisko pasażera raczej nam się nie przyda, tak samo jak numer biletu, te kolumny pominiemy. Zdecydowaliśmy sie też pominąć wiek i kabinę. Potrzebna jest natomiast płeć, port i klasa. Utworzymy więc dodatkowe kolumny dla tych wszystkich cech, zawierające jedynki i zera, czyli wartości liczbowe, których oczekuje komputer, zamiast podawać mu wartości opisowe typu S, C, Q, male, female itd
   
- ```
- dict = {"S" : 1, "C" : 2, "Q": 3}
-
-df['Embarked_Int'] = df['Embarked']
-df = df.replace({"Embarked_Int": dict})
-df['Sex_Int'] = df['Sex'].apply(lambda x: 0 if x == 'female' else 1)
 ```
-
-  ### 2.4 Analiza danych.
-
-  Zbudujmy kilka wykresów, żeby lepiej widziec zależności.
-  
-  ```
-import matplotlib.pyplot as plt   
-%matplotlib inline
-
-import seaborn as sns
-
-fig, ax = plt.subplots(2,3, figsize=(20,8))
-sns.barplot(x="Sex", y="Survived", palette='flare', data=df, ax=ax[0][0]).set_title('Płeć vs Przetrwanie')
-sns.barplot(x="Pclass", y="Survived", palette='flare', data=df, ax=ax[0][1]).set_title('Klasa vs Przetrwanie')
-sns.barplot(x="Parch", y="Survived", palette='flare', data=df, ax=ax[0][2]).set_title('Dzieci/Rodzice vs Przetrwanie')
-sns.barplot(x="SibSp", y="Survived", palette='flare', data=df, ax=ax[1][0]).set_title('Krewni vs Przetrwanie')
-sns.barplot(x="Embarked", y="Survived", palette='flare', data=df, ax=ax[1][1]).set_title('Port vs Przetrwanie')
-sns.histplot(x="Age", y='Survived', palette='flare', data=df, ax=ax[1][2]).set_title('Wiek vs Przetrwanie')
-```  
-  ![image](https://user-images.githubusercontent.com/13216011/148649819-76de1297-e334-4e68-8285-6e5e5bccc4ce.png)
-
- Z powyższych wykresów wynika, że:
-
-- kobiety mają większą szansę na przetrwanie
-- pasażerowie pierwszej klasy mają wiekszą szansę na przetrwanie
-- podróżujący z dziećmi/rodzicami mają większą szansę na przetrwanie (chyba, że masz powyżej 3jki dzieci)
-- podróżujący ze współmałżonkiem lub rodzeństwem mają większe szanse na przetrwanie
+type_dummies = pd.get_dummies(df['Sex'])
+df = pd.concat([df,type_dummies],axis=1)
  
- Oprócz zrobienia wykresów i naocznego badania zależności, możemy też sprawdzić korelację (tutaj zwyczajowo przypominamy sobie, że korelacja mówi o tym, czy dwie zmienne są ze sobą istotnie statystycznie powiązane, a nie o tym, że jedna powoduje drugą) poszczególnych kolumn z kolumną 'Survived':
- ```
- df.corrwith(df['Survived']).sort_values()
+type_dummies = pd.get_dummies(df['Embarked'])
+df = pd.concat([df,type_dummies],axis=1)
+ 
+type_dummies = pd.get_dummies(df['Pclass'])
+df = pd.concat([df,type_dummies],axis=1)
+ 
+df.sample()
 ```
  
-![image](https://user-images.githubusercontent.com/13216011/148959424-c578c058-34c7-4b83-895d-54d9d6f31b9c.png)
+ ![image](https://user-images.githubusercontent.com/13216011/165543117-f78c28d8-6464-40d6-8f45-b4671030dff6.png)
 
-Jak widać wyżej, wysoką korelację (ujemną lub dodatnią) mają płeć, klasa, opłata za bilet i port zaokrętowania - te zmienne wprowadzimy do modelu.(Może nieco dziwić niska korelacja wieku, ale w tym momencie nie będziemy się tym przejmować.)
+Dlaczego dodajemy kolumny również dla klasy, skoro klasa ma wartość liczbową? Owszem, ma, ale ma wartość 1, 2 , 3. # dla komputera jest większe, niż 2 i 1, mógłby więc w jakiś sposób faworyzować trójki. Albo jedynki. Albo wpaść na inny pomysł, widząc dane, które można porównać. Dlatego zamienimy 1, 2 i 3 na dodatkowe kolumny z zerami i jedynkami, tak samo jak płeć i port. To ma sens?
+
  
- ### 2.5 Model ML.
+ ### 2.4 Model ML.
  ![image](https://user-images.githubusercontent.com/13216011/148962715-1c607d33-f572-4199-847b-f5f9fa5e728a.png)
 
  MLowa część kodu zwykle jest najkrótsza, dużo dzieje się samo i automagicznie, ale wciąż pozostaje kilka decyzji, które musimy podjąć sami. Między innymi:
- - które zmienne wejdą do modelu
- - jakiego modelu będziemy używać
- - jak będziemy testować jego skuteczność
+ - które zmienne wejdą do modelu (to mamy trochę wyżej, zdecydowaliśmy się użyć zmiennych Klasa, Wiek, Cena, Port, SibSp i Parch. Wiek i Kabina zostały odrzucone ze względu na duże braki, Bilet ze względu na bardzo dużą niejednorodność danych (bilet to kombinacja literek i cyferek, kilkaset różnych rekordów, o których nie wiemy prawie nic), imię, ponieważ jest unikalne dla każdego pasażera, tak samo jak ID, a zatem mało nam mówi o grupach ludzi (grupa przeżył lub nie)
+ - jakiego modelu będziemy używać. Nasze badanie oczekuje klasyfikacji, przypisania osoby do grupy 'przeżył' lub 'nie przeżył'. Z tego względu mamy do wyboru szereg modeli do klasyfikacji przenzaczonych, takich jak drzewa losowe, catboost xgboost i inne.
  
  Let's go!
  
@@ -172,85 +170,43 @@ Jak widać wyżej, wysoką korelację (ujemną lub dodatnią) mają płeć, klas
 - Pierwszy argument to  **macierz/tablica** cech (**Uwaga**: cecha może być jedna, ale to nadal ma być tablica, nie wektor!)
 - Drugi argument to **wektor** zmiennej docelowej (eng. *target variable*)
  
- Przygotowujemy zmienne (te same zmienne, o których wiemy, że mają istotną korelację ze zmienną docelową Survived):
- ```
-feats = [ 'Sex_Int', 'Pclass', 'Fare', 'Embarked_Int' ] #zmienne, które mają wysoką korelację z Survived
-
-X = df[feats].values # X to nasza macierz wartości (uwaga suchar, jak się nazywa męska tablica? pacierz)
-
-y = df["Survived"].values # wektor zmiennej docelowej
- ```
- 
- Gdyby ktoś się zastanawiał, X wygląda tak:
- ![image](https://user-images.githubusercontent.com/13216011/148964646-8a9a451c-c6f5-4a80-a7ce-00374ece440c.png)
-
-Ponieważ chcemy wiedzieć, jak nasz model sobie będzie radził, potrzebujemy móc go na czymś sprawdzić. Nie posiadamy zbioru testowego z odpowiedziami, dlatego podzielimy ten, który mamy, treningowy, na 2 części. Jednej użyjemy do trenowania, a drugiej do testowania.
  
 ```
-from sklearn.model_selection import train_test_split
+# lista cech, których chcemy użyć w modelu:
+feats = ['Fare', 'Parch', 'SibSp', 'female',  'male', 'C',    'Q',   'S',   1,  2, 3]
 
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2)
-print("Train:", X_train.shape, y_train.shape)
-print("Test:", X_test.shape, y_test.shape)
-```
+# macierz cech. Pamiętajmy, że złączyliśmy 2 zbiory! Model chcemy stworzyć na podstawie zbioru treningowego, więc 
+# musimy odfiltrować te wiersze, które nie mają zmiennej Survived!
 
-Następnie model, którego będziemy używać. Nasza zmienna docelowa posiada 2 wartości, 0 i 1. Albo inaczej mówiąc, 2 klasy: przeżył/nie przeżył. Szukamy zatem czegoś do klasyfikacji (wynikiem jest przydział do grupy, na przykład pies/kot. W przeciwieństwie do regresji, gdzie przewidujemy wartość, na przykład cenę benzyny) i możemy wybierać między innymi między Logistic Regression, Naive Bayes, Stochastic Gradient Descent, Decision Tree, Random Forest, Support Vector Machine etc. Nie szalejmy, LogisticRegression brzmi spoko. (attention 1: mimo, że nazwa modelu to regresja, używamy go do klasyfikacji, pownieważ attention 2, przyjmuje wartości 0 i 1)
+train = df[df['Survived'].isna() == False][feats] # macierz cech zbioru treningowego
+targets = df[df['Survived'].isna() == False]['Survived'] # wektor zmiennej docelowej
+
+X_test = df[feats] # macierz cech zbioru testowego
+
+model = xgb.XGBClassifier() # wybieramy model, dziś to będzie XGBoost
+
+model.fit(train, targets) # trenujemy model na zbiorze treningowym
  
-```
-from sklearn.linear_model import LogisticRegression
+predictions = model.predict(X_test) # używamy modelu na zbiorze treningowym i próbujemy 'przewidzieć' zawartość kolumny Survived
 
-model =  LogisticRegression()
-model.fit(X_train, y_train)    # trenujemy model
-```
- 
-I to już :)  Wiem, mało imponujące. Co tu zaszło? Algorytm dostał macierz cech X (X_train) i wektor cechy docelowej Y (y_train). Zbadał związki między jednym i drugim i zbudował funkcję, według której cechy X wpływają na wartość Y. Teraz tę funkcję chcemy zaaplikować do testowego zbioru (X_test) i wygenerować zestaw wyników. Następnie te wyniki porównamy z rzeczywistymi wynikami (y_test) i  dowiemy się, jaka jest skuteczność modelu. Żeby porównać wyniki, użyjemy accuracy_score. Jest to miara, która przedstawia liczbę wszystkich prawidłowo przewidzianych wartości w stosunku do liczby wszystkich wartości w zbiorze. Czyli jeśli prawidłowo trafiliśmy 30 wartości ze 100 elementowego zbioru, to nasza skuteczność wynosi 30%.
- 
-Takich miar do sprawdzania poprawności modelu jest kilka (np. Classification Accuracy, Logarithmic Loss, Confusion Matrix, Mean Squared Error etc). Jedne działają dobrze dla klasyfikacji, inne dla regresji. Z biegiem czasu człowiek uczy się intuicyjnie wybierać odpowiednie, ale zanim to nastąpi, dobrze jest mieć cheat sheet :) 
- 
- ```
-#sprawdzamy skuteczność modelu
-from sklearn.metrics import accuracy_score
-
-y_pred = model.predict(X_test) # używamy naszego modelu na zbiorze testowym i zapisujemy przewidziane wyniki do y_pred
-
-accuracy_score(y_test, y_pred) # porównujemy przewidziane wyniki y_pred z rzeczywistymi wartościami w y_test
- ```
- 
- W tym przypadku accuracy score to 78%. (uwaga, ta liczba zmienia się w zależności od wielkości zbioru testowego. Możemy zmienić wartość test_size w funkcji train_test_split, żeby to zaobserwować). Ten wynik nie jest super wiarygodny, pamiętajmy, że nasz wynik na kaggle może się od niego różnić o kilka procent, ponieważ będziemy testować na zupełnie innym zbiorze. Czas to sprawdzić. Przygotujmy więc dane testowe kagglowe (plik test.csv)
-
-```
- # wczytajmy testowy zbiór Kaggle
-kaggle_test = pd.read_csv('./test.csv')
-```
- Musimy przygotować cechy w zbiorze testowym tak samo, jak te w treningowym. Sprawdzamy więc braki w danych i zamieniamy wartości na liczbowe tam, gdzie tego potrzebujemy.
- 
- ```
- kaggle_test.loc[kaggle_test['Age'].isnull(), 'Age'] = kaggle_test['Age'].median() # uzupełnij brakujący wiek
-kaggle_test.loc[kaggle_test['Fare'].isnull(), 'Fare'] = kaggle_test['Fare'].mean() # uzupełnij brakującą opłatę
-
-# zamień literki z kolumny Embarked na cyfry
-dict = {"S" : 1, "C" : 2, "Q": 3}
-
-kaggle_test['Embarked_Int'] = kaggle_test['Embarked']
-kaggle_test = kaggle_test.replace({"Embarked_Int": dict})
-
-# zamień płcie z kolumny Sex na cyfry
-kaggle_test['Sex_Int'] = kaggle_test['Sex'].apply(lambda x: 0 if x == 'female' else 1)
+df["y_pred"] = predictions # dopisujemy przewidziane wyniki do naszego datasetu
 ```
  
-Przygotowujemy macierz cech i wykonujemy predykcję na zbiorze:
-```
-feats = [ 'Sex_Int', 'Pclass', 'Fare', 'Embarked_Int' ] #zmienne potrzebne w modelu, te same, których użyliśmy do trenowania
+I to już :)  Wiem, mało imponujące. Co tu zaszło? Algorytm dostał macierz cech X (train) i wektor cechy docelowej Y (targets). Zbadał związki między jednym i drugim i zbudował funkcję, według której cechy train wpływają na wartość targets. Następnie tę funkcję aplikujemy do testowego zbioru (X_test) i generujemy zestaw wyników. 
 
-X_kaggle_test = kaggle_test[feats].values # macierz cech
-   
-pred = model.predict(X_kaggle_test) # predykcja
-```
+Czas wziąć wyniki, wrzucić na Kaggle i dowiedzieć się, jaki mamy wynik.
 
-Zapisujemy do pliku submission.csv 2 kolumny: ID pasażera i nasz przewidywany wynik. Taki format pliku jest narzucony przez Kaggle, można to sprawdzić w zakładce Data. I w końcu wrzucamy nasz plik na Kaggle i sprawdzamy, jak sobie poradził :) 
+```
+results = df[df["Survived"].isna() == True][["PassengerId", "y_pred"]]
+results.columns = ["PassengerId", "Survived"]
+results["Survived"] = results["Survived"].astype(int)
+results.to_csv("very_basic.csv",index=False)
+```
+![image](https://user-images.githubusercontent.com/13216011/165547121-1efc2953-904c-4265-8a48-c3c341716dff.png)
+
  
 ## 3. PODSUMOWANIE.
  
-<p align="justify"> Mój wynik to 0.76315. Myślę, że to się plasuje gdzieś w kategorii brązowego medalu, czyli nie było najgorzej, zdecydowanie może być lepiej. Ale hej, tu chodziło o zrozumienie schematu i kolejności wykonywania działań przy zwyczajnym zadaniu MLowym. Na inżynierię cech i inne cuda przyjdzie jeszcze czas.
+<p align="justify"> Mój wynik to 0.76555. Myślę, że to się plasuje gdzieś w kategorii brązowego medalu, czyli nie było najgorzej, zdecydowanie może być lepiej. Ale hej, tu chodziło o zrozumienie schematu i kolejności wykonywania działań przy zwyczajnym zadaniu MLowym. Na inżynierię cech i inne cuda przyjdzie jeszcze czas.
  
 PS> Btw, nie dajcie się zdeprymować wynikami równymi 1 na leaderboardzie Kaggle. To ludzie, którzy oszukiwali - [tutaj](https://www.kaggle.com/carlmcbrideellis/titanic-leaderboard-a-score-0-8-is-great) info na ten temat.
