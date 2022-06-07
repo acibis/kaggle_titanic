@@ -8,8 +8,6 @@
 
 ## 1. WSTĘP
 
-<p align="justify"> Żeby zacząć pracować z danymi i Machine Learningiem, należy posiadać bardzo specyficzny rys psychologiczny. Trzeba się pogodzić ze stałą frustracją, poszukiwaniem, wiecznym cofaniem się o kilka kroków, niejednokrotnie niemożnością ułożenia wszystkiego chronologicznie, logicznie i ładnie. Pamiętam, jak na samym początku drogi denerwowałam się, widząc długaśne analizy danych, wykresy i ściany tekstu, podczas gdy szukałam przecież MLa, a nie statystyki. I pamiętam irytację, kiedy magiczny ML okazywał się trzema nieopisanymi linijkami kodu w gąszczu czyszczenia danych, feature engineeringu i innych rzeczy. Teraz, długi czas później, już wiem, że to jednak te wszystkie poprzedzające etapy są najważniejsze, a ML to rzeczywiście trzy nieimponujące linijki, które wykonują 10% pracy, a których powodzenie zależy od 90% reszty etapów. Również dużo czasu zajęło mi zrozumienie, że warto cenić prostotę i zaczynać od najmniej skomplikowanych pomysłów. A zatem: do najprostszego możliwego rozwiązania tego problemu!
-
 Co jest zawsze ważne?
  - model ML przyjmuje jedynie dane liczbowe - jeśli dane mają inną formę (na przykład kolor), należy je przerobić
  - model ML nie przyjmie danych z brakami - jeśli dane mają braki, należy się ich pozbyć (usunąć lub uzupełnić, wedle uznania)
@@ -108,6 +106,7 @@ def find_fare(embarked, pclass):
   df[df['Embarked'].isnull()]
   ```
   ![image](https://user-images.githubusercontent.com/13216011/148649063-4cee0c94-59fd-4608-84a7-866937f32f1a.png)
+  
 Widzimy, że te dwie podróżne mieszkały w jednej kabinie. Być może płynęły z kimś jeszcze, kto mieszkał w tej samej kabinie i posiada informację o porcie, w którym wsiedli?
  ```
  df[df['Cabin'] == "B28"]
@@ -137,7 +136,7 @@ She boarded the Titanic at Southampton as maid to Mrs George Nelson Stone. She t
   ```
   ![image](https://user-images.githubusercontent.com/13216011/148649627-daeeeebf-86b3-41b7-acb3-2c44377181e6.png)
   
-  Imię i nazwisko pasażera raczej nam się nie przyda, tak samo jak numer biletu, te kolumny pominiemy. Zdecydowaliśmy sie też pominąć wiek i kabinę. Potrzebna jest natomiast płeć, port i klasa. Utworzymy więc dodatkowe kolumny dla tych wszystkich cech, zawierające jedynki i zera, czyli wartości liczbowe, których oczekuje komputer, zamiast podawać mu wartości opisowe typu S, C, Q, male, female itd
+  Imię i nazwisko pasażera raczej nam się nie przyda, tak samo jak numer biletu, te kolumny pominiemy. Zdecydowaliśmy sie też pominąć wiek i kabinę. Potrzebna jest natomiast płeć, port i klasa. Żeby zamienić dane opisowe na liczbowe, utworzymy dodatkowe kolumny dla tych wszystkich cech, zawierające jedynki i zera - zamiast jednej kolumny Sex z wartościami 'male' i 'female' będziemy mieli 2 nowe kolumny, jedną nazwaną 'male', która będzie posiadała jedynki dla wszystkich pasażerów, którzy są mężczyznami (i zera dla reszty), i jedną kolumnę nazwaną 'female', zawierającą jedynki wszędzie tam, gdzie płeć = kobieta, i analogicznie zera na pozostałych miejscach. To samo stanie się z innymi kolumnami, rozmnożą się.
   
 ```
 type_dummies = pd.get_dummies(df['Sex'])
@@ -162,7 +161,7 @@ Dlaczego dodajemy kolumny również dla klasy, skoro klasa ma wartość liczbow�
 
  MLowa część kodu zwykle jest najkrótsza, dużo dzieje się samo i automagicznie, ale wciąż pozostaje kilka decyzji, które musimy podjąć sami. Między innymi:
  - które zmienne wejdą do modelu (to mamy trochę wyżej, zdecydowaliśmy się użyć zmiennych Klasa, Wiek, Cena, Port, SibSp i Parch. Wiek i Kabina zostały odrzucone ze względu na duże braki, Bilet ze względu na bardzo dużą niejednorodność danych (bilet to kombinacja literek i cyferek, kilkaset różnych rekordów, o których nie wiemy prawie nic), imię, ponieważ jest unikalne dla każdego pasażera, tak samo jak ID, a zatem mało nam mówi o grupach ludzi (grupa przeżył lub nie)
- - jakiego modelu będziemy używać. Nasze badanie oczekuje klasyfikacji, przypisania osoby do grupy 'przeżył' lub 'nie przeżył'. Z tego względu mamy do wyboru szereg modeli do klasyfikacji przenzaczonych, takich jak drzewa losowe, catboost xgboost i inne.
+ - jakiego modelu będziemy używać. Nasze badanie oczekuje klasyfikacji, przypisania osoby do grupy 'przeżył' lub 'nie przeżył'. Z tego względu mamy do wyboru szereg modeli do klasyfikacji przeznaczonych, takich jak drzewa losowe, catboost xgboost i inne.
  
  Let's go!
  
