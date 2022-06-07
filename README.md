@@ -8,13 +8,12 @@
 
 ## 1. WSTĘP
 
-Co jest zawsze ważne?
- - model ML przyjmuje jedynie dane liczbowe - jeśli dane mają inną formę (na przykład kolor), należy je przerobić
- - model ML nie przyjmie danych z brakami - jeśli dane mają braki, należy się ich pozbyć (usunąć lub uzupełnić, wedle uznania)
- - jedne cechy mają większy wpływ na przewidywany wynik niż inne - niektórych wcale nie trzeba brać pod uwagę i wrzucać do modelu
- - można tworzyć nowe cechy na podstawie już istniejących. Jak?
- - przed przystąpieniem do tworzenia modelu dobrze jest przeanalizować dane i użyć zdrowego rozsądku oraz intelektu (niestety)
+Co jest ważne?
+
  - warto połączyć zbiór treningowy z testowym, żeby zwiększyć ilość danych.
+ - model ML nie przyjmie danych z brakami - jeśli dane mają braki, należy się ich pozbyć (usunąć lub uzupełnić, wedle uznania)
+ - model ML przyjmuje jedynie dane liczbowe - jeśli dane mają inną formę (na przykład kolor), należy je przerobić
+ - przed przystąpieniem do tworzenia modelu dobrze jest przeanalizować dane i użyć zdrowego rozsądku oraz intelektu (niestety)
   
   ## 2. PLAN
   1. Wczytać dane, połączyć zbiory i rzucić na nie okiem.
